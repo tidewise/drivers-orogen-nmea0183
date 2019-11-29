@@ -1,0 +1,13 @@
+# frozen_string_literal: true
+
+name 'nmea0183'
+
+import_types_from 'base'
+import_types_from 'ais_base'
+
+using_task_library 'iodrivers_base'
+using_library 'nmea0183'
+
+task_context 'AISTask', subclasses: 'iodrivers_base::Task' do
+    needs_configuration
+end

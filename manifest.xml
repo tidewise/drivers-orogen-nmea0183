@@ -1,0 +1,10 @@
+<package>
+  <description brief="Tasks for common devices based on NMEA0183">
+  </description>
+  <author>Sylvain Joyeux/sylvain.joyeux@tidewise.io</author>
+  <license>LGPLv2+</license>
+  <depend package="base/cmake" />
+  <depend package="drivers/nmea0183" />
+  <depend package="drivers/orogen/iodrivers_base" />
+  <depend package="drivers/orogen/ais_base" />
+</package>
