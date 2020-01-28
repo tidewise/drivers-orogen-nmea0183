@@ -8,6 +8,12 @@ import_types_from 'ais_base'
 using_task_library 'iodrivers_base'
 using_library 'nmea0183'
 
+# Parsing of an AIS NMEA0183 stream
 task_context 'AISTask', subclasses: 'iodrivers_base::Task' do
     needs_configuration
+
+    output_port 'positions', '/ais_base/Position'
+    output_port 'vessels_information', '/ais_base/VesselInformation'
+    output_port 'voyages_information', '/ais_base/VoyageInformation'
+    output_port 'ignored_messages', '/int'
 end
