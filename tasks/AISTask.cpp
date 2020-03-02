@@ -57,7 +57,13 @@ void AISTask::updateHook()
     AISTaskBase::updateHook();
 }
 void AISTask::processIO() {
-    auto msg = m_ais->readMessage();
+    std::unique_ptr<marnav::ais::message> msg;
+    try {
+        msg = m_ais->readMessage();
+    }
+    catch(...) {
+        return;
+    }
 
     switch (msg->type()) {
         case ais::message_id::position_report_class_a: {
