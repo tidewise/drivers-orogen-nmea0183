@@ -21,9 +21,9 @@ namespace nmea0183 {
         friend class AISTaskBase;
 
     protected:
-        std::unique_ptr<Driver> m_driver;
-        std::unique_ptr<AIS> m_ais;
-        void processIO();
+        std::unique_ptr<AIS> mAIS;
+        AISStats mAISStats;
+        bool processSentence(marnav::nmea::sentence const& sentence);
 
     public:
         /** TaskContext constructor for AISTask

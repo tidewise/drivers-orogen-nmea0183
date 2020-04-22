@@ -8,4 +8,5 @@
   <depend package="drivers/marnav" />
   <depend package="drivers/orogen/iodrivers_base" />
   <depend package="drivers/orogen/ais_base" />
+  <test_depend package="tools/syskit" />
 </package>

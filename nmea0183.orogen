@@ -1,19 +1,34 @@
 # frozen_string_literal: true
 
-name 'nmea0183'
+name "nmea0183"
 
-import_types_from 'base'
-import_types_from 'ais_base'
+import_types_from "base"
+import_types_from "ais_base"
+import_types_from "nmea0183Types.hpp"
 
-using_task_library 'iodrivers_base'
-using_library 'nmea0183'
+using_task_library "iodrivers_base"
+using_library "nmea0183"
 
-# Parsing of an AIS NMEA0183 stream
-task_context 'AISTask', subclasses: 'iodrivers_base::Task' do
+# Generic implementation of a component reading NMEA0183 sentences from a
+# serial port using marnav
+task_context "MarnavTask", subclasses: "iodrivers_base::Task" do
+    abstract
     needs_configuration
 
-    output_port 'positions', '/ais_base/Position'
-    output_port 'vessels_information', '/ais_base/VesselInformation'
-    output_port 'voyages_information', '/ais_base/VoyageInformation'
-    output_port 'ignored_messages', '/int'
+    output_port "nmea_stats", "/nmea0183/NMEAStats"
+
+    port_driven
+end
+
+task_context "test::MarnavTestTask", subclasses: "nmea0183::MarnavTask" do
+    output_port "received_sentences", "std::string"
+end
+
+# Parsing of an AIS NMEA0183 stream
+task_context "AISTask", subclasses: "nmea0183::MarnavTask" do
+    output_port "positions", "/ais_base/Position"
+    output_port "vessels_information", "/ais_base/VesselInformation"
+    output_port "voyages_information", "/ais_base/VoyageInformation"
+
+    output_port "ais_stats", "/nmea0183/AISStats"
 end

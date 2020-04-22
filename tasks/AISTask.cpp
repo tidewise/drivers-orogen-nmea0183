@@ -2,12 +2,15 @@
 
 #include "AISTask.hpp"
 
+#include <base-logging/Logging.hpp>
+
 #include <iodrivers_base/ConfigureGuard.hpp>
 #include <marnav/ais/message.hpp>
 #include <marnav/ais/message_02.hpp>
 #include <marnav/ais/message_03.hpp>
-#include <nmea0183/Driver.hpp>
 #include <nmea0183/AIS.hpp>
+#include <nmea0183/Driver.hpp>
+#include <nmea0183/Exceptions.hpp>
 
 using namespace std;
 
@@ -29,20 +32,11 @@ AISTask::~AISTask()
 
 bool AISTask::configureHook()
 {
-    unique_ptr<Driver> driver(new Driver());
-    iodrivers_base::ConfigureGuard guard(this);
-    if (!_io_port.get().empty()) {
-        driver->openURI(_io_port.get());
-    }
-    setDriver(driver.get());
-
     if (!AISTaskBase::configureHook()) {
         return false;
     }
 
-    m_driver = move(driver);
-    m_ais.reset(new AIS(*m_driver));
-    guard.commit();
+    mAIS.reset(new AIS(*mDriver));
     return true;
 }
 bool AISTask::startHook()
@@ -55,16 +49,32 @@ bool AISTask::startHook()
 void AISTask::updateHook()
 {
     AISTaskBase::updateHook();
+
+    mAISStats.time = base::Time::now();
+    mAISStats.discarded_sentences = mAIS->getDiscardedSentenceCount();
+    _ais_stats.write(mAISStats);
 }
-void AISTask::processIO() {
-    std::unique_ptr<marnav::ais::message> msg;
-    try {
-        msg = m_ais->readMessage();
-    }
-    catch(...) {
-        return;
+bool AISTask::processSentence(marnav::nmea::sentence const& sentence) {
+    if (sentence.id() != nmea::sentence_id::VDM) {
+        return false;
     }
 
+    unique_ptr<marnav::ais::message> msg;
+    try {
+        msg = mAIS->processSentence(sentence);
+        if (!msg) {
+            return true;
+        }
+    }
+    catch (MarnavParsingError const& e) {
+        LOG_ERROR_S << "error reported by marnav while creating an AIS message: "
+                    << e.what()
+                    << std::endl;
+        mAISStats.invalid_messages++;
+        return true;
+    }
+
+    mAISStats.received_messages++;
     switch (msg->type()) {
         case ais::message_id::position_report_class_a: {
             auto msg01 = ais::message_cast<ais::message_01>(msg);
@@ -88,8 +98,10 @@ void AISTask::processIO() {
             break;
         }
         default:
-            _ignored_messages.write(static_cast<int>(msg->type()));
+            mAISStats.ignored_messages++;
+            break;
     }
+    return true;
 }
 void AISTask::errorHook()
 {
@@ -102,5 +114,5 @@ void AISTask::stopHook()
 void AISTask::cleanupHook()
 {
     AISTaskBase::cleanupHook();
-    m_driver.release();
+    mDriver.release();
 }
