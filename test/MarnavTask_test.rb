@@ -7,10 +7,14 @@ describe OroGen.nmea0183.MarnavTask do
 
     attr_reader :task
 
-    before do
-        @task = syskit_deploy(
+    def deploy_task_under_test
+        syskit_deploy(
             OroGen.nmea0183.test.MarnavTestTask.deployed_as("marnav_task")
         )
+    end
+
+    before do
+        @task = deploy_task_under_test
 
         # This complicated setup works around that data readers and writers
         # in Syskit connect themselves only when their target tasks are running
@@ -71,6 +75,22 @@ describe OroGen.nmea0183.MarnavTask do
         assert_equal 1, stats.invalid_sentences
         assert_equal 0, stats.received_sentences
         assert_equal 0, stats.ignored_sentences
+    end
+
+    describe "processRawSentence" do
+        def deploy_task_under_test
+            syskit_deploy(
+                OroGen.nmea0183.test.MarnavProcessRawSentenceTask
+                      .deployed_as("marnav_task")
+            )
+        end
+
+        it "lets the subclasses fine-tune the raw sentence" do
+            sentence = expect_execution do
+                syskit_write @io.out_port, @xdr_sentence
+            end.to { have_one_new_sample task.received_sentences_port }
+            assert_equal "$GPZDA,160012.710,11,03,2004,-1,00*4D", sentence
+        end
     end
 
     def make_packet(sentence)
