@@ -49,15 +49,14 @@ void MarnavTask::updateHook()
     MarnavTaskBase::updateHook();
 }
 void MarnavTask::processIO() {
+    static const int BUFFER_SIZE = marnav::nmea::sentence::max_length * 2;
+    uint8_t buffer[BUFFER_SIZE];
     try {
-        auto sentence = mDriver->readSentence();
-        mNMEAStats.time = base::Time::now();
-        mNMEAStats.received_sentences++;
+        int sentence_size = mDriver->readPacket(buffer, BUFFER_SIZE);
 
-        bool processed = processSentence(*sentence);
-        if (!processed) {
-            mNMEAStats.ignored_sentences++;
-        }
+        char* buffer_s = reinterpret_cast<char*>(buffer);
+        string sentence_string(buffer_s, buffer_s + sentence_size - 2);
+        processRawSentence(sentence_string);
     }
     catch (MarnavParsingError const& e) {
         mNMEAStats.invalid_sentences++;
@@ -66,6 +65,27 @@ void MarnavTask::processIO() {
     }
 
     _nmea_stats.write(mNMEAStats);
+}
+
+void MarnavTask::processRawSentence(std::string const& sentence_string) {
+    unique_ptr<marnav::nmea::sentence> sentence;
+    try {
+        sentence = marnav::nmea::make_sentence(sentence_string);
+    }
+    catch (std::exception const& e) {
+        mNMEAStats.invalid_sentences++;
+        LOG_ERROR_S << "NMEA sentence not recognized by marnav: "
+                    << e.what() << std::endl;
+        return;
+    }
+
+    mNMEAStats.time = base::Time::now();
+    mNMEAStats.received_sentences++;
+
+    bool processed = processSentence(*sentence);
+    if (!processed) {
+        mNMEAStats.ignored_sentences++;
+    }
 }
 void MarnavTask::errorHook()
 {

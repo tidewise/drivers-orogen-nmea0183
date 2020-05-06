@@ -24,6 +24,10 @@ task_context "test::MarnavTestTask", subclasses: "nmea0183::MarnavTask" do
     output_port "received_sentences", "std::string"
 end
 
+task_context "test::MarnavProcessRawSentenceTask",
+             subclasses: "nmea0183::test::MarnavTestTask" do
+end
+
 # Parsing of an AIS NMEA0183 stream
 task_context "AISTask", subclasses: "nmea0183::MarnavTask" do
     output_port "positions", "/ais_base/Position"
