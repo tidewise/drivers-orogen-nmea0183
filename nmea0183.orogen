@@ -16,8 +16,6 @@ task_context "MarnavTask", subclasses: "iodrivers_base::Task" do
     needs_configuration
 
     output_port "nmea_stats", "/nmea0183/NMEAStats"
-
-    port_driven
 end
 
 task_context "test::MarnavTestTask", subclasses: "nmea0183::MarnavTask" do
