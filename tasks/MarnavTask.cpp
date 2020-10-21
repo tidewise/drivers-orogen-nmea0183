@@ -58,6 +58,9 @@ void MarnavTask::processIO() {
         string sentence_string(buffer_s, buffer_s + sentence_size - 2);
         processRawSentence(sentence_string);
     }
+    catch (iodrivers_base::TimeoutError const& e) {
+        LOG_ERROR_S << "Timed out on message, probably received a partial sentence" << std::endl;
+    }
     catch (MarnavParsingError const& e) {
         mNMEAStats.invalid_sentences++;
         LOG_ERROR_S << "NMEA sentence not recognized by marnav: "
