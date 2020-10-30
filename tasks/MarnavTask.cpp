@@ -42,6 +42,20 @@ bool MarnavTask::startHook()
     if (! MarnavTaskBase::startHook()) {
         return false;
     }
+
+    /** Flush any data already received. It might be a partial sentence, and
+     * since some NMEA devices are slow-sending (e.g. AIS), simply relying on
+     * receiving another message will timeout
+     */
+    static const int BUFFER_SIZE = marnav::nmea::sentence::max_length * 2;
+    uint8_t buffer[BUFFER_SIZE];
+    try {
+        while(true) {
+            mDriver->readPacket(buffer, BUFFER_SIZE, base::Time(), base::Time());
+        }
+    }
+    catch(iodrivers_base::TimeoutError&) {}
+
     return true;
 }
 void MarnavTask::updateHook()
