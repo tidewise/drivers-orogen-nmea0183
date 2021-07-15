@@ -52,7 +52,7 @@ describe OroGen.nmea0183.AISTask do
         end
 
         assert_equal 366_730_000, position.mmsi
-        assert_in_delta 51.3*Math::PI/180, position.course_over_ground.rad, 1e-3
+        assert_in_delta -51.3*Math::PI/180, position.course_over_ground.rad, 1e-3
         assert_in_delta 37.80*Math::PI/180, position.latitude.rad, 1e-3
         assert_in_delta -122.39*Math::PI/180, position.longitude.rad, 1e-3
         assert_equal :STATUS_MOORED, position.status
