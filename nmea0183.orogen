@@ -4,6 +4,7 @@ name "nmea0183"
 
 import_types_from "base"
 import_types_from "ais_base"
+import_types_from "gps_base"
 import_types_from "nmea0183Types.hpp"
 
 using_task_library "iodrivers_base"
@@ -33,4 +34,10 @@ task_context "AISTask", subclasses: "nmea0183::MarnavTask" do
     output_port "voyages_information", "/ais_base/VoyageInformation"
 
     output_port "ais_stats", "/nmea0183/AISStats"
+end
+
+# Parsing of an AIS NMEA0183 stream
+task_context "GPSTask", subclasses: "nmea0183::MarnavTask" do
+    output_port "gps_position", "/gps_base/Position"
+    output_port "gps_solution_quality", "/gps_base/SolutionQuality"
 end
