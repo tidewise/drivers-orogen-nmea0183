@@ -53,7 +53,7 @@ bool GPSTask::processSentence(marnav::nmea::sentence const& sentence)
         }
         return true;
     }
-    return true;
+    return false;
 }
 void GPSTask::errorHook()
 {
