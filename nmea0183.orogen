@@ -38,6 +38,6 @@ end
 
 # Parsing of an AIS NMEA0183 stream
 task_context "GPSTask", subclasses: "nmea0183::MarnavTask" do
-    output_port "gps_position", "/gps_base/Position"
+    output_port "gps_solution", "/gps_base/Solution"
     output_port "gps_solution_quality", "/gps_base/SolutionQuality"
 end

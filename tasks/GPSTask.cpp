@@ -39,8 +39,8 @@ bool GPSTask::processSentence(marnav::nmea::sentence const& sentence)
     if (sentence.id() == nmea::sentence_id::RMC) {
         auto rmc = nmea::sentence_cast<nmea::rmc>(&sentence);
         if (rmc && m_gsa) {
-            auto gps_position = nmea0183::GPS::getPosition(*rmc, *m_gsa);
-            _gps_position.write(gps_position);
+            auto gps_solution = nmea0183::GPS::getSolution(*rmc, *m_gsa);
+            _gps_solution.write(gps_solution);
         }
         return true;
     }

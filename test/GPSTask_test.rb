@@ -49,13 +49,12 @@ describe OroGen.nmea0183.GPSTask do
         position = expect_execution do
             syskit_write @io.out_port, @rmc_msg
         end.to {
-            have_one_new_sample(task.gps_position_port)
+            have_one_new_sample(task.gps_solution_port)
         }
         assert(position.latitude.nan?)
         assert(position.longitude.nan?)
         assert_equal(:INVALID, position.positionType)
         assert_equal(0, position.noOfSatellites)
-        # TODO: altitude, ...
     end
 
     def make_packet(sentence)
