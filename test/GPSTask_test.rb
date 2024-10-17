@@ -58,7 +58,7 @@ describe OroGen.nmea0183.GPSTask do
         assert_equal(0, position.noOfSatellites)
     end
 
-    it "increments_the_ignored_sentences_for_nom_rmc_or_gsa_msgs" do
+    it "increments the ignored sentences for non rmc or gsa messages" do
         stats = expect_execution do
             syskit_write @io.out_port, @ais_msg
         end.to {
