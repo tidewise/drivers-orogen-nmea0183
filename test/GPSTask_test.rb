@@ -35,6 +35,7 @@ describe OroGen.nmea0183.GPSTask do
 
         @rmc_msg = make_packet("$GNRMC,000848.00,V,2253.8645,S,04312.0880,W,,,060180,,,N*51\r\n")
         @gsa_msg = make_packet("$GNGSA,A,1,,,,,,,,,,,,,2.0,1.7,1.0*2B\r\n")
+        @ais_msg = make_packet("!AIVDM,1,1,,A,15MgK45P3@G?fl0E`JbR0OwT0@MS,0*4E\r\n")
     end
 
     it "parses gsa and rmc messages into gps solution quality and position" do
@@ -55,6 +56,15 @@ describe OroGen.nmea0183.GPSTask do
         assert(position.longitude.nan?)
         assert_equal(:INVALID, position.positionType)
         assert_equal(0, position.noOfSatellites)
+    end
+
+    it "increments_the_ignored_sentences_for_nom_rmc_or_gsa_msgs" do
+        stats = expect_execution do
+            syskit_write @io.out_port, @ais_msg
+        end.to {
+            have_one_new_sample(task.nmea_stats_port)
+        }
+        assert_equal(stats.ignored_sentences, 1)
     end
 
     def make_packet(sentence)
