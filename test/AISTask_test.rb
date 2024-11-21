@@ -52,14 +52,14 @@ describe OroGen.nmea0183.AISTask do
         end
 
         assert_equal 366_730_000, position.mmsi
-        assert_in_delta -51.3*Math::PI/180, position.course_over_ground.rad, 1e-3
-        assert_in_delta 37.80*Math::PI/180, position.latitude.rad, 1e-3
-        assert_in_delta -122.39*Math::PI/180, position.longitude.rad, 1e-3
+        assert_in_delta -51.3 * Math::PI / 180, position.course_over_ground.rad, 1e-3
+        assert_in_delta 37.80 * Math::PI / 180, position.latitude.rad, 1e-3
+        assert_in_delta -122.39 * Math::PI / 180, position.longitude.rad, 1e-3
         assert_equal :STATUS_MOORED, position.status
         assert_equal 0, position.high_accuracy_position
         assert position.yaw.rad.nan?
         assert position.yaw_velocity.nan?
-        assert_in_delta 20.8, position.speed_over_ground
+        assert_in_delta 10.7004352, position.speed_over_ground
 
         assert_equal 0, stats.discarded_sentences
         assert_equal 0, stats.invalid_messages
@@ -144,9 +144,10 @@ describe OroGen.nmea0183.AISTask do
               "!AIVDM,3,1,3,B,I`1ifG20UrcNTFE?UgLeo@Dk:o6G4hhI8;?vW2?El>D,0*25\r\n"
 
         nmea_stats, stats = expect_execution { syskit_write @io.out_port, make_packet(msg) }
-                .to {
-                    [have_one_new_sample(task.nmea_stats_port),
-                     have_one_new_sample(task.ais_stats_port)] }
+                            .to do
+            [have_one_new_sample(task.nmea_stats_port),
+             have_one_new_sample(task.ais_stats_port)]
+        end
 
         assert_equal 1, stats.discarded_sentences
         assert_equal 0, stats.invalid_messages
