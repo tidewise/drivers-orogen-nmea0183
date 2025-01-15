@@ -29,6 +29,8 @@ end
 
 # Parsing of an AIS NMEA0183 stream
 task_context "AISTask", subclasses: "nmea0183::MarnavTask" do
+    property "utm_configuration", "/gps_base/UTMConversionParameters"
+
     output_port "positions", "/ais_base/Position"
     output_port "vessels_information", "/ais_base/VesselInformation"
     output_port "voyages_information", "/ais_base/VoyageInformation"
