@@ -1,6 +1,7 @@
 # frozen_string_literal: true
 
 using_task_library "nmea0183"
+using_task_library "ais_base"
 
 describe OroGen.nmea0183.AISTask do
     run_live
@@ -10,6 +11,11 @@ describe OroGen.nmea0183.AISTask do
     before do
         @task = syskit_deploy(
             OroGen.nmea0183.AISTask.deployed_as("ais_task")
+        )
+        @task.properties.utm_configuration = Types.gps_base.UTMConversionParameters.new(
+            nwu_origin: Eigen::Vector3.new(0, 0, 0),
+            utm_zone: 11,
+            utm_north: true
         )
 
         # This complicated setup works around that data readers and writers
@@ -153,6 +159,36 @@ describe OroGen.nmea0183.AISTask do
         assert_equal 0, stats.invalid_messages
         assert_equal 0, stats.received_messages
         assert_equal 0, stats.ignored_messages
+    end
+
+    it "corrects vessel's coordinates to be in the world frame if " \
+    "corresponding VesselInformation exists" do
+        # reference_position = [100, 50, 0]
+        vessel_info_msg =
+            "!AIVDM,2,1,,B,55MgK40000000000003wwwwww40000000000000001T0j00" \
+            "Ht0000000,0*77\r\n!AIVDM,2,2,,B,000000000000008,2*1F\r\n"
+
+        info, _, _ = expect_execution do
+            syskit_write @io.out_port, make_packet(vessel_info_msg)
+        end.to do
+            [have_one_new_sample(task.vessels_information_port),
+            have_one_new_sample(task.voyages_information_port),
+            have_one_new_sample(task.ais_stats_port)]
+        end
+
+        # lat = 45; long = -120
+        position_msg = "!AIVDM,1,1,,B,15MgK4?P1cGJch0Igth3Q?wh0000,0*0F\r\n"
+
+        position, stats = expect_execution do
+            syskit_write @io.out_port, make_packet(position_msg)
+        end.to do
+            [have_one_new_sample(task.positions_port),
+            have_one_new_sample(task.ais_stats_port)]
+        end
+
+        assert_equal 366_730_000, position.mmsi
+        assert_in_delta 44.9991 * Math::PI / 180, position.latitude.rad, 1e-4
+        assert_in_delta -119.9993 * Math::PI / 180, position.longitude.rad, 1e-4
     end
 
     def make_packet(sentence)
