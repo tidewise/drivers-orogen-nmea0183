@@ -4,10 +4,10 @@
 #define NMEA0183_AISTASK_TASK_HPP
 
 #include "nmea0183/AISTaskBase.hpp"
-#include <optional>
-#include <gps_base/UTMConverter.hpp>
 #include <base/samples/RigidBodyState.hpp>
 #include <gps_base/BaseTypes.hpp>
+#include <gps_base/UTMConverter.hpp>
+#include <optional>
 
 namespace nmea0183 {
     class Driver;
@@ -24,10 +24,10 @@ namespace nmea0183 {
         friend class AISTaskBase;
 
     protected:
-        std::unique_ptr<AIS> mAIS;
-        AISStats mAISStats;
-        std::map<int, ais_base::VesselInformation> mVessels;
-        gps_base::UTMConverter mUTMConverter;
+        std::unique_ptr<AIS> m_AIS;
+        AISStats m_AIS_stats;
+        std::map<int, ais_base::VesselInformation> m_vessels;
+        gps_base::UTMConverter m_UTM_converter;
         base::samples::RigidBodyState convertGPSToUTM(ais_base::Position position);
         ais_base::Position convertUTMToGPSInWorldFrame(
             base::samples::RigidBodyState sensor2vessel_in_UTM,

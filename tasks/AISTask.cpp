@@ -36,7 +36,7 @@ bool AISTask::configureHook()
         return false;
     }
 
-    mAIS.reset(new AIS(*mDriver));
+    m_AIS.reset(new AIS(*mDriver));
     return true;
 }
 bool AISTask::startHook()
@@ -45,16 +45,16 @@ bool AISTask::startHook()
         return false;
     }
 
-    mUTMConverter.setParameters(_utm_configuration.get());
+    m_UTM_converter.setParameters(_utm_configuration.get());
     return true;
 }
 void AISTask::updateHook()
 {
     AISTaskBase::updateHook();
 
-    mAISStats.time = base::Time::now();
-    mAISStats.discarded_sentences = mAIS->getDiscardedSentenceCount();
-    _ais_stats.write(mAISStats);
+    m_AIS_stats.time = base::Time::now();
+    m_AIS_stats.discarded_sentences = m_AIS->getDiscardedSentenceCount();
+    _ais_stats.write(m_AIS_stats);
 }
 base::Vector3d sensorDataToWorld(base::Vector3d sensor2vessel_pos,
     Eigen::Quaterniond vessel2world_ori)
@@ -72,7 +72,7 @@ base::samples::RigidBodyState AISTask::convertGPSToUTM(ais_base::Position positi
 
     base::samples::RigidBodyState sensor2world_in_UTM;
     sensor2world_in_UTM.position =
-        mUTMConverter.convertToUTM(sensor2world_solution).position;
+        m_UTM_converter.convertToUTM(sensor2world_solution).position;
 
     return sensor2world_in_UTM;
 }
@@ -84,7 +84,7 @@ ais_base::Position AISTask::convertUTMToGPSInWorldFrame(
     vessel2world_in_UTM.position = sensor2world_in_UTM.position + sensor2world_pos;
 
     gps_base::Solution vessel2world_in_GPS;
-    vessel2world_in_GPS = mUTMConverter.convertUTMToGPS(vessel2world_in_UTM);
+    vessel2world_in_GPS = m_UTM_converter.convertUTMToGPS(vessel2world_in_UTM);
 
     ais_base::Position vessel2world_pos;
     vessel2world_pos.latitude = base::Angle::fromDeg(vessel2world_in_GPS.latitude);
@@ -100,7 +100,7 @@ bool AISTask::processSentence(marnav::nmea::sentence const& sentence)
 
     unique_ptr<marnav::ais::message> msg;
     try {
-        msg = mAIS->processSentence(sentence);
+        msg = m_AIS->processSentence(sentence);
         if (!msg) {
             return true;
         }
@@ -108,11 +108,11 @@ bool AISTask::processSentence(marnav::nmea::sentence const& sentence)
     catch (MarnavParsingError const& e) {
         LOG_ERROR_S << "error reported by marnav while creating an AIS message: "
                     << e.what() << std::endl;
-        mAISStats.invalid_messages++;
+        m_AIS_stats.invalid_messages++;
         return true;
     }
 
-    mAISStats.received_messages++;
+    m_AIS_stats.received_messages++;
     switch (msg->type()) {
         case ais::message_id::position_report_class_a: {
             auto msg01 = ais::message_cast<ais::message_01>(msg);
@@ -142,7 +142,7 @@ bool AISTask::processSentence(marnav::nmea::sentence const& sentence)
             break;
         }
         default:
-            mAISStats.ignored_messages++;
+            m_AIS_stats.ignored_messages++;
             break;
     }
     return true;
@@ -165,16 +165,16 @@ void AISTask::processPositionReport(ais_base::Position& position, int mmsi)
 }
 std::optional<ais_base::VesselInformation> AISTask::getCorrespondingVesselInfo(int mmsi)
 {
-    if (mVessels.find(mmsi) != mVessels.end()) {
-        return mVessels.at(mmsi);
+    if (m_vessels.find(mmsi) != m_vessels.end()) {
+        return m_vessels.at(mmsi);
     }
 
     return std::nullopt;
 }
 void AISTask::addToMap(ais_base::VesselInformation info)
 {
-    if (mVessels.find(info.mmsi) == mVessels.end()) {
-        mVessels[info.mmsi] = info;
+    if (m_vessels.find(info.mmsi) == m_vessels.end()) {
+        m_vessels[info.mmsi] = info;
     }
 }
 void AISTask::errorHook()
