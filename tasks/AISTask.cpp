@@ -117,55 +117,19 @@ bool AISTask::processSentence(marnav::nmea::sentence const& sentence)
         case ais::message_id::position_report_class_a: {
             auto msg01 = ais::message_cast<ais::message_01>(msg);
             auto position = AIS::getPosition(*msg01);
-            auto vessel = getCorrespondingVesselInfo(position.mmsi);
-            if (vessel.has_value()) {
-                Eigen::Quaterniond vessel2world_ori(
-                    Eigen::AngleAxisd(position.course_over_ground.getRad(),
-                        Eigen::Vector3d::UnitZ()));
-                auto sensor2world_pos =
-                    sensorDataToWorld(vessel->reference_position, vessel2world_ori);
-                auto pos = convertUTMToGPSInWorldFrame(convertGPSToUTM(position),
-                    sensor2world_pos);
-                position.latitude = pos.latitude;
-                position.longitude = pos.longitude;
-            }
-            _positions.write(position);
+            processPositionReport(position, position.mmsi);
             break;
         }
         case ais::message_id::position_report_class_a_assigned_schedule: {
             auto msg02 = ais::message_cast<ais::message_02>(msg);
             auto position = AIS::getPosition(*msg02);
-            auto vessel = getCorrespondingVesselInfo(position.mmsi);
-            if (vessel.has_value()) {
-                Eigen::Quaterniond vessel2world_ori(
-                    Eigen::AngleAxisd(position.course_over_ground.getRad(),
-                        Eigen::Vector3d::UnitZ()));
-                auto sensor2world_pos =
-                    sensorDataToWorld(vessel->reference_position, vessel2world_ori);
-                auto pos = convertUTMToGPSInWorldFrame(convertGPSToUTM(position),
-                    sensor2world_pos);
-                position.latitude = pos.latitude;
-                position.longitude = pos.longitude;
-            }
-            _positions.write(position);
+            processPositionReport(position, position.mmsi);
             break;
         }
         case ais::message_id::position_report_class_a_response_to_interrogation: {
             auto msg03 = ais::message_cast<ais::message_03>(msg);
             auto position = AIS::getPosition(*msg03);
-            auto vessel = getCorrespondingVesselInfo(position.mmsi);
-            if (vessel.has_value()) {
-                Eigen::Quaterniond vessel2world_ori(
-                    Eigen::AngleAxisd(position.course_over_ground.getRad(),
-                        Eigen::Vector3d::UnitZ()));
-                auto sensor2world_pos =
-                    sensorDataToWorld(vessel->reference_position, vessel2world_ori);
-                auto pos = convertUTMToGPSInWorldFrame(convertGPSToUTM(position),
-                    sensor2world_pos);
-                position.latitude = pos.latitude;
-                position.longitude = pos.longitude;
-            }
-            _positions.write(position);
+            processPositionReport(position, position.mmsi);
             break;
         }
         case ais::message_id::static_and_voyage_related_data: {
@@ -182,6 +146,22 @@ bool AISTask::processSentence(marnav::nmea::sentence const& sentence)
             break;
     }
     return true;
+}
+void AISTask::processPositionReport(ais_base::Position& position, int mmsi)
+{
+    auto vessel = getCorrespondingVesselInfo(mmsi);
+    if (vessel.has_value()) {
+        Eigen::Quaterniond vessel2world_ori(
+            Eigen::AngleAxisd(position.course_over_ground.getRad(),
+                Eigen::Vector3d::UnitZ()));
+        auto sensor2world_pos =
+            sensorDataToWorld(vessel->reference_position, vessel2world_ori);
+        auto pos =
+            convertUTMToGPSInWorldFrame(convertGPSToUTM(position), sensor2world_pos);
+        position.latitude = pos.latitude;
+        position.longitude = pos.longitude;
+    }
+    _positions.write(position);
 }
 std::optional<ais_base::VesselInformation> AISTask::getCorrespondingVesselInfo(int mmsi)
 {
