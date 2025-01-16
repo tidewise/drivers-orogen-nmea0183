@@ -33,7 +33,9 @@ describe OroGen.nmea0183.GPSTask do
         )
         @io = cmp.reader_writer_child
 
-        @rmc_msg = make_packet("$GNRMC,000848.00,V,2253.8645,S,04312.0880,W,,,060180,,,N*51\r\n")
+        @rmc_msg = make_packet(
+            "$GNRMC,000848.00,V,2253.8645,S,04312.0880,W,,,060180,,,N*51\r\n"
+        )
         @gsa_msg = make_packet("$GNGSA,A,1,,,,,,,,,,,,,2.0,1.7,1.0*2B\r\n")
         @ais_msg = make_packet("!AIVDM,1,1,,A,15MgK45P3@G?fl0E`JbR0OwT0@MS,0*4E\r\n")
     end

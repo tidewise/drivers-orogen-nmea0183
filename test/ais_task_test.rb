@@ -8,7 +8,7 @@ describe OroGen.nmea0183.AISTask do
 
     attr_reader :task
 
-    before do
+    before do # rubocop:disable Metrics/BlockLength
         @task = syskit_deploy(
             OroGen.nmea0183.AISTask.deployed_as("ais_task")
         )
@@ -106,7 +106,7 @@ describe OroGen.nmea0183.AISTask do
     end
 
     it "parses a msg05 into vessel and voyage info" do
-        vessel, voyage, stats = expect_execution do
+        vessel, _, stats = expect_execution do
             syskit_write @io.out_port, @msg05
         end.to do
             [have_one_new_sample(task.vessels_information_port),
@@ -149,8 +149,8 @@ describe OroGen.nmea0183.AISTask do
         msg = "!AIVDM,3,1,3,B,I`1ifG20UrcNTFE?UgLeo@Dk:o6G4hhI8;?vW2?El>D,0*25\r\n"\
               "!AIVDM,3,1,3,B,I`1ifG20UrcNTFE?UgLeo@Dk:o6G4hhI8;?vW2?El>D,0*25\r\n"
 
-        nmea_stats, stats = expect_execution { syskit_write @io.out_port, make_packet(msg) }
-                            .to do
+        _, stats = expect_execution { syskit_write @io.out_port, make_packet(msg) }
+                   .to do
             [have_one_new_sample(task.nmea_stats_port),
              have_one_new_sample(task.ais_stats_port)]
         end
@@ -168,22 +168,22 @@ describe OroGen.nmea0183.AISTask do
             "!AIVDM,2,1,,B,55MgK40000000000003wwwwww40000000000000001T0j00" \
             "Ht0000000,0*77\r\n!AIVDM,2,2,,B,000000000000008,2*1F\r\n"
 
-        info, _, _ = expect_execution do
+        expect_execution do
             syskit_write @io.out_port, make_packet(vessel_info_msg)
         end.to do
             [have_one_new_sample(task.vessels_information_port),
-            have_one_new_sample(task.voyages_information_port),
-            have_one_new_sample(task.ais_stats_port)]
+             have_one_new_sample(task.voyages_information_port),
+             have_one_new_sample(task.ais_stats_port)]
         end
 
         # lat = 45; long = -120
         position_msg = "!AIVDM,1,1,,B,15MgK4?P1cGJch0Igth3Q?wh0000,0*0F\r\n"
 
-        position, stats = expect_execution do
+        position, = expect_execution do
             syskit_write @io.out_port, make_packet(position_msg)
         end.to do
             [have_one_new_sample(task.positions_port),
-            have_one_new_sample(task.ais_stats_port)]
+             have_one_new_sample(task.ais_stats_port)]
         end
 
         assert_equal 366_730_000, position.mmsi

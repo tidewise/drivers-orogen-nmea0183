@@ -103,7 +103,7 @@ describe OroGen.nmea0183.MarnavTask do
         syskit_configure(@task)
 
         socket = UDPSocket.new
-        socket.send("DR,C,19.52,C,TempAir*19", 0, "127.0.0.1", 10_000);
+        socket.send("DR,C,19.52,C,TempAir*19", 0, "127.0.0.1", 10_000)
         syskit_start(@task)
         sleep 0.1
         expect_execution { task.stop! }
