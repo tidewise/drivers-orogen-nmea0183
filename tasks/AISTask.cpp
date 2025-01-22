@@ -57,13 +57,13 @@ void AISTask::updateHook()
     m_AIS_stats.discarded_sentences = m_AIS->getDiscardedSentenceCount();
     _ais_stats.write(m_AIS_stats);
 }
-base::Vector3d sensorDataToWorld(base::Vector3d sensor2vessel_pos,
+base::Vector3d sensorToVesselInWorldPose(base::Vector3d sensor2vessel_pos,
     Eigen::Quaterniond vessel2world_ori)
 {
-    base::Vector3d sensor2world_pos;
-    sensor2world_pos = vessel2world_ori * sensor2vessel_pos;
+    base::Vector3d sensor2vessel_in_world_pos;
+    sensor2vessel_in_world_pos = vessel2world_ori * sensor2vessel_pos;
 
-    return sensor2world_pos;
+    return sensor2vessel_in_world_pos;
 }
 base::samples::RigidBodyState AISTask::convertGPSToUTM(ais_base::Position position)
 {
@@ -71,25 +71,25 @@ base::samples::RigidBodyState AISTask::convertGPSToUTM(ais_base::Position positi
     sensor2world_solution.latitude = position.latitude.getDeg();
     sensor2world_solution.longitude = position.longitude.getDeg();
 
-    base::samples::RigidBodyState sensor2world_in_UTM;
-    sensor2world_in_UTM.position =
+    base::samples::RigidBodyState sensor2world_UTM;
+    sensor2world_UTM.position =
         m_UTM_converter.convertToUTM(sensor2world_solution).position;
 
-    return sensor2world_in_UTM;
+    return sensor2world_UTM;
 }
 ais_base::Position AISTask::convertUTMToGPSInWorldFrame(
-    base::samples::RigidBodyState sensor2world_in_UTM,
-    base::Vector3d sensor2world_pos)
+    base::samples::RigidBodyState sensor2world_UTM,
+    base::Vector3d sensor2vessel_in_world_pos)
 {
-    base::samples::RigidBodyState vessel2world_in_UTM;
-    vessel2world_in_UTM.position = sensor2world_in_UTM.position + sensor2world_pos;
+    base::samples::RigidBodyState vessel2world_UTM;
+    vessel2world_UTM.position = sensor2world_UTM.position + sensor2vessel_in_world_pos;
 
-    gps_base::Solution vessel2world_in_GPS;
-    vessel2world_in_GPS = m_UTM_converter.convertUTMToGPS(vessel2world_in_UTM);
+    gps_base::Solution vessel2world_GPS;
+    vessel2world_GPS = m_UTM_converter.convertUTMToGPS(vessel2world_UTM);
 
     ais_base::Position vessel2world_pos;
-    vessel2world_pos.latitude = base::Angle::fromDeg(vessel2world_in_GPS.latitude);
-    vessel2world_pos.longitude = base::Angle::fromDeg(vessel2world_in_GPS.longitude);
+    vessel2world_pos.latitude = base::Angle::fromDeg(vessel2world_GPS.latitude);
+    vessel2world_pos.longitude = base::Angle::fromDeg(vessel2world_GPS.longitude);
 
     return vessel2world_pos;
 }
@@ -160,10 +160,10 @@ void AISTask::processPositionReport(ais_base::Position& position, int mmsi)
         Eigen::Quaterniond vessel2world_ori(
             Eigen::AngleAxisd(position.course_over_ground.getRad(),
                 Eigen::Vector3d::UnitZ()));
-        auto sensor2world_pos =
-            sensorDataToWorld(vessel->reference_position, vessel2world_ori);
-        auto pos =
-            convertUTMToGPSInWorldFrame(convertGPSToUTM(position), sensor2world_pos);
+        auto sensor2vessel_in_world_pos =
+            sensorToVesselInWorldPose(vessel->reference_position, vessel2world_ori);
+        auto pos = convertUTMToGPSInWorldFrame(convertGPSToUTM(position),
+            sensor2vessel_in_world_pos);
         position.latitude = pos.latitude;
         position.longitude = pos.longitude;
     }
