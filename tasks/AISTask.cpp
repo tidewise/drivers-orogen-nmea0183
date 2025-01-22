@@ -36,7 +36,7 @@ bool AISTask::configureHook()
         return false;
     }
 
-    m_use_correction = _use_correction.get();
+    m_use_sensor_offset_correction = _use_sensor_offset_correction.get();
     m_AIS.reset(new AIS(*mDriver));
     return true;
 }
@@ -150,7 +150,7 @@ bool AISTask::processSentence(marnav::nmea::sentence const& sentence)
 }
 void AISTask::processPositionReport(ais_base::Position& position, int mmsi)
 {
-    if (!m_use_correction) {
+    if (!m_use_sensor_offset_correction) {
         _positions.write(position);
         return;
     }

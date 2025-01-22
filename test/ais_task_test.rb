@@ -17,7 +17,7 @@ describe OroGen.nmea0183.AISTask do
             utm_zone: 11,
             utm_north: true
         )
-        @task.properties.use_correction = true
+        @task.properties.use_sensor_offset_correction = true
 
         # This complicated setup works around that data readers and writers
         # in Syskit connect themselves only when their target tasks are running
@@ -192,8 +192,8 @@ describe OroGen.nmea0183.AISTask do
         assert_in_delta -119.9993 * Math::PI / 180, position.longitude.rad, 1e-4
     end
 
-    it "expects no correction if 'use_correction' flag is set to false" do
-        @task.properties.use_correction = false
+    it "expects no correction if 'use_sensor_offset_correction' flag is set to false" do
+        @task.properties.use_sensor_offset_correction = false
 
         # reference_position = [100, 50, 0]
         vessel_info_msg =

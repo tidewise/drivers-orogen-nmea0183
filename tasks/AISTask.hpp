@@ -28,7 +28,7 @@ namespace nmea0183 {
         AISStats m_AIS_stats;
         std::map<int, ais_base::VesselInformation> m_vessels;
         gps_base::UTMConverter m_UTM_converter;
-        bool m_use_correction;
+        bool m_use_sensor_offset_correction;
         base::samples::RigidBodyState convertGPSToUTM(ais_base::Position position);
         ais_base::Position convertUTMToGPSInWorldFrame(
             base::samples::RigidBodyState sensor2vessel_in_UTM,

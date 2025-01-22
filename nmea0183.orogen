@@ -32,7 +32,7 @@ task_context "AISTask", subclasses: "nmea0183::MarnavTask" do
     property "utm_configuration", "/gps_base/UTMConversionParameters"
     
     # Whether to use the position correction or not
-    property "use_correction", "/bool"
+    property "use_sensor_offset_correction", "/bool"
 
     output_port "positions", "/ais_base/Position"
     output_port "vessels_information", "/ais_base/VesselInformation"
