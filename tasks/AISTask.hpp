@@ -29,10 +29,6 @@ namespace nmea0183 {
         std::map<int, ais_base::VesselInformation> m_vessels;
         gps_base::UTMConverter m_UTM_converter;
         bool m_use_sensor_offset_correction;
-        base::samples::RigidBodyState convertGPSToUTM(ais_base::Position position);
-        ais_base::Position convertUTMToGPSInWorldFrame(
-            base::samples::RigidBodyState sensor2vessel_in_UTM,
-            base::Vector3d sensor2world_pos);
         void processPositionReport(ais_base::Position& position, int mmsi);
         bool processSentence(marnav::nmea::sentence const& sentence);
         std::optional<ais_base::VesselInformation> getCorrespondingVesselInfo(int mmsi);
