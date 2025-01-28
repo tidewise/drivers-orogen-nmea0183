@@ -96,8 +96,8 @@ describe OroGen.nmea0183.AISTask do
             assert_in_delta 3.8, vessel.draft, 1e-3
             assert_in_delta 50, vessel.length, 1e-3
             assert_in_delta 9, vessel.width, 1e-3
-            assert_in_delta 10, vessel.reference_position.x, 1e-3
-            assert_in_delta 5, vessel.reference_position.y, 1e-3
+            assert_in_delta -15, vessel.reference_position.x, 1e-3
+            assert_in_delta 0.5, vessel.reference_position.y, 1e-3
             assert_in_delta 0, vessel.reference_position.z, 1e-3
 
             assert_equal 0, stats.discarded_sentences
@@ -208,7 +208,7 @@ describe OroGen.nmea0183.AISTask do
             OroGen.nmea0183.AISTask.deployed_as("ais_task")
         )
         @task.properties.utm_configuration = Types.gps_base.UTMConversionParameters.new(
-            nwu_origin: Eigen::Vector3.new(0, 0, 0),
+            nwu_origin: Eigen::Vector3.new(1, 1, 0),
             utm_zone: 11,
             utm_north: true
         )
