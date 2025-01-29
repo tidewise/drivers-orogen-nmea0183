@@ -29,7 +29,7 @@ namespace nmea0183 {
         std::map<int, ais_base::VesselInformation> m_vessels;
         gps_base::UTMConverter m_UTM_converter;
         bool m_use_sensor_offset_correction;
-        void processPositionReport(ais_base::Position& position, int mmsi);
+        void processPositionReport(std::optional<ais_base::Position> position, int mmsi);
         bool processSentence(marnav::nmea::sentence const& sentence);
         std::optional<ais_base::VesselInformation> getCorrespondingVesselInfo(int mmsi);
         void updateKnownVessels(ais_base::VesselInformation info);

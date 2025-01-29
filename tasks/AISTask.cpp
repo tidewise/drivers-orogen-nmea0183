@@ -112,24 +112,24 @@ bool AISTask::processSentence(marnav::nmea::sentence const& sentence)
     }
     return true;
 }
-void AISTask::processPositionReport(ais_base::Position& position, int mmsi)
+void AISTask::processPositionReport(std::optional<ais_base::Position> position, int mmsi)
 {
     if (!m_use_sensor_offset_correction) {
-        _positions.write(position);
+        _positions.write(position.value());
         return;
     }
 
     auto vessel = getCorrespondingVesselInfo(mmsi);
     if (vessel.has_value()) {
-        auto corrected_position = AIS::applyPositionCorrection(position,
+        auto corrected_position = AIS::applyPositionCorrection(position.value(),
             vessel->reference_position,
             m_UTM_converter);
 
-        position.latitude = corrected_position.latitude;
-        position.longitude = corrected_position.longitude;
-        position.correction_status = corrected_position.correction_status;
+        position.value().latitude = corrected_position.latitude;
+        position.value().longitude = corrected_position.longitude;
+        position.value().correction_status = corrected_position.correction_status;
     }
-    _positions.write(position);
+    _positions.write(position.value());
 }
 std::optional<ais_base::VesselInformation> AISTask::getCorrespondingVesselInfo(int mmsi)
 {
