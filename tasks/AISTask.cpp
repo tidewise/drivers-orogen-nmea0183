@@ -101,7 +101,7 @@ bool AISTask::processSentence(marnav::nmea::sentence const& sentence)
             auto msg05 = ais::message_cast<ais::message_05>(msg);
             auto vesselInformation = AIS::getVesselInformation(*msg05);
             auto voyageInformation = AIS::getVoyageInformation(*msg05);
-            updateKnownVessels(vesselInformation);
+            m_vessels[vesselInformation.mmsi] = vesselInformation;
             _vessels_information.write(vesselInformation);
             _voyages_information.write(voyageInformation);
             break;
@@ -138,12 +138,6 @@ std::optional<ais_base::VesselInformation> AISTask::getCorrespondingVesselInfo(i
     }
 
     return {};
-}
-void AISTask::updateKnownVessels(ais_base::VesselInformation info)
-{
-    if (m_vessels.find(info.mmsi) == m_vessels.end()) {
-        m_vessels[info.mmsi] = info;
-    }
 }
 void AISTask::errorHook()
 {
