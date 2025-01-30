@@ -24,15 +24,54 @@ namespace nmea0183 {
         friend class AISTaskBase;
 
     protected:
+        /**
+         * @brief AIS instance
+         */
         std::unique_ptr<AIS> m_AIS;
+
+        /**
+         * @brief Statistics on AIS messages
+         */
         AISStats m_AIS_stats;
+
+        /**
+         * @brief Map of vessel information indexed by MMSI
+         */
         std::map<int, ais_base::VesselInformation> m_vessels;
+
+        /**
+         * @brief Converter for GPS coordinates to UTM and vice-versa
+         */
         gps_base::UTMConverter m_UTM_converter;
+
+        /**
+         * @brief Flag indicating whether sensor offset correction should be applied
+         */
         bool m_use_sensor_offset_correction;
+
+        /**
+         * @brief Processes an AIS position report
+         *
+         * @param position The position report, if available
+         * @param mmsi The vessel's MMSI
+         */
         void processPositionReport(std::optional<ais_base::Position> position, int mmsi);
+
+        /**
+         * @brief Parses and processes an NMEA sentence
+         *
+         * @param sentence The NMEA sentence to process
+         * @return True if the sentence was successfully processed, false otherwise
+         */
         bool processSentence(marnav::nmea::sentence const& sentence);
+
+        /**
+         * @brief Retrieves vessel information corresponding to the given MMSI
+         *
+         * @param mmsi The vessel's MMSI
+         * @return Vessel information if found, otherwise std::nullopt
+         */
         std::optional<ais_base::VesselInformation> getCorrespondingVesselInfo(int mmsi);
-        void updateKnownVessels(ais_base::VesselInformation info);
 
     public:
         /** TaskContext constructor for AISTask
