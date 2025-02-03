@@ -52,10 +52,10 @@ namespace nmea0183 {
         /**
          * @brief Processes an AIS position report
          *
-         * @param position The position report, if available
+         * @param position The position report
          * @param mmsi The vessel's MMSI
          */
-        void processPositionReport(std::optional<ais_base::Position> position, int mmsi);
+        void processPositionReport(ais_base::Position const& position, int mmsi);
 
         /**
          * @brief Parses and processes an NMEA sentence

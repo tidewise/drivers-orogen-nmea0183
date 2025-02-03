@@ -100,10 +100,9 @@ bool AISTask::processSentence(marnav::nmea::sentence const& sentence)
         case ais::message_id::static_and_voyage_related_data: {
             auto msg05 = ais::message_cast<ais::message_05>(msg);
             auto vesselInformation = AIS::getVesselInformation(*msg05);
-            auto voyageInformation = AIS::getVoyageInformation(*msg05);
             m_vessels[vesselInformation.mmsi] = vesselInformation;
             _vessels_information.write(vesselInformation);
-            _voyages_information.write(voyageInformation);
+            _voyages_information.write(AIS::getVoyageInformation(*msg05));
             break;
         }
         default:
@@ -112,24 +111,23 @@ bool AISTask::processSentence(marnav::nmea::sentence const& sentence)
     }
     return true;
 }
-void AISTask::processPositionReport(std::optional<ais_base::Position> position, int mmsi)
+void AISTask::processPositionReport(ais_base::Position const& position, int mmsi)
 {
     if (!m_use_sensor_offset_correction) {
-        _positions.write(position.value());
+        _positions.write(position);
         return;
     }
 
     auto vessel = getCorrespondingVesselInfo(mmsi);
     if (vessel.has_value()) {
-        auto corrected_position = AIS::applyPositionCorrection(position.value(),
+        auto corrected_position = AIS::applyPositionCorrection(position,
             vessel->reference_position,
             m_UTM_converter);
-
-        position.value().latitude = corrected_position.latitude;
-        position.value().longitude = corrected_position.longitude;
-        position.value().correction_status = corrected_position.correction_status;
+        _positions.write(corrected_position);
     }
-    _positions.write(position.value());
+    else {
+        _positions.write(position);
+    }
 }
 std::optional<ais_base::VesselInformation> AISTask::getCorrespondingVesselInfo(int mmsi)
 {

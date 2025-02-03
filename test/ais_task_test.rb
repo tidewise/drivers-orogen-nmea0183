@@ -151,7 +151,7 @@ describe OroGen.nmea0183.AISTask do
             end
 
             # lat = 45; long = -120
-            position_msg = "!AIVDM,1,1,,B,15MgK4?P1cGJch0Igth>42oh0000,0*72\r\n"
+            position_msg = "!AIVDM,1,1,,B,15MgK4?P00GJch0Igth>42oh0000,0*20\r\n"
 
             position, = expect_execution do
                 syskit_write @io.out_port, make_packet(position_msg)
