@@ -27,12 +27,12 @@ namespace nmea0183 {
         /**
          * @brief AIS instance
          */
-        std::unique_ptr<AIS> m_AIS;
+        std::unique_ptr<AIS> m_ais;
 
         /**
          * @brief Statistics on AIS messages
          */
-        AISStats m_AIS_stats;
+        AISStats m_ais_stats;
 
         /**
          * @brief Map of vessel information indexed by MMSI

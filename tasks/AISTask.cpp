@@ -37,7 +37,7 @@ bool AISTask::configureHook()
     }
 
     m_use_sensor_offset_correction = _use_sensor_offset_correction.get();
-    m_AIS.reset(new AIS(*mDriver));
+    m_ais.reset(new AIS(*mDriver));
     return true;
 }
 bool AISTask::startHook()
@@ -53,9 +53,9 @@ void AISTask::updateHook()
 {
     AISTaskBase::updateHook();
 
-    m_AIS_stats.time = base::Time::now();
-    m_AIS_stats.discarded_sentences = m_AIS->getDiscardedSentenceCount();
-    _ais_stats.write(m_AIS_stats);
+    m_ais_stats.time = base::Time::now();
+    m_ais_stats.discarded_sentences = m_ais->getDiscardedSentenceCount();
+    _ais_stats.write(m_ais_stats);
 }
 bool AISTask::processSentence(marnav::nmea::sentence const& sentence)
 {
@@ -65,7 +65,7 @@ bool AISTask::processSentence(marnav::nmea::sentence const& sentence)
 
     unique_ptr<marnav::ais::message> msg;
     try {
-        msg = m_AIS->processSentence(sentence);
+        msg = m_ais->processSentence(sentence);
         if (!msg) {
             return true;
         }
@@ -73,11 +73,11 @@ bool AISTask::processSentence(marnav::nmea::sentence const& sentence)
     catch (MarnavParsingError const& e) {
         LOG_ERROR_S << "error reported by marnav while creating an AIS message: "
                     << e.what() << std::endl;
-        m_AIS_stats.invalid_messages++;
+        m_ais_stats.invalid_messages++;
         return true;
     }
 
-    m_AIS_stats.received_messages++;
+    m_ais_stats.received_messages++;
     switch (msg->type()) {
         case ais::message_id::position_report_class_a: {
             auto msg01 = ais::message_cast<ais::message_01>(msg);
@@ -107,7 +107,7 @@ bool AISTask::processSentence(marnav::nmea::sentence const& sentence)
             break;
         }
         default:
-            m_AIS_stats.ignored_messages++;
+            m_ais_stats.ignored_messages++;
             break;
     }
     return true;
