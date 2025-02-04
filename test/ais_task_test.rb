@@ -134,9 +134,8 @@ describe OroGen.nmea0183.AISTask do
             assert_equal 0, stats.ignored_messages
         end
 
-        it "corrects vessel's coordinates to be in the world frame if " \
-           "corresponding VesselInformation exists and 'use_sensor_offset_correction' " \
-           "flag is on" do
+        it "corrects vessel's coordinates using yaw if corresponding " \
+           "VesselInformation exists and 'use_sensor_offset_correction flag is on" do
             # reference_position = [100, 50, 0]
             vessel_info_msg =
                 "!AIVDM,2,1,,B,55MgK40000000000003wwwwww40000000000000001T0j00" \
@@ -144,6 +143,64 @@ describe OroGen.nmea0183.AISTask do
 
             expect_execution do
                 syskit_write @io.out_port, make_packet(vessel_info_msg)
+            end.to do
+                [have_one_new_sample(task.vessels_information_port),
+                 have_one_new_sample(task.voyages_information_port),
+                 have_one_new_sample(task.ais_stats_port)]
+            end
+
+            # lat = 45; long = -120
+            # yaw = 90
+            position_msg = "!AIVDM,1,1,,B,15MgK4?P00GJch0Igth>42oh0000,0*20\r\n"
+
+            position, = expect_execution do
+                syskit_write @io.out_port, make_packet(position_msg)
+            end.to do
+                [have_one_new_sample(task.positions_port),
+                 have_one_new_sample(task.ais_stats_port)]
+            end
+
+            assert_equal 366_730_000, position.mmsi
+            assert_equal :POSITION_CENTERED_USING_HEADING, position.correction_status
+            assert_in_delta 44.9991 * Math::PI / 180, position.latitude.rad, 1e-4
+            assert_in_delta -119.9993 * Math::PI / 180, position.longitude.rad, 1e-4
+        end
+
+        it "corrects vessel's coordinates using course if corresponding " \
+           "VesselInformation exists and 'use_sensor_offset_correction flag is on" do
+            # reference_position = [100, 50, 0]
+            vessel_info_msg =
+                "!AIVDM,2,1,,B,55MgK40000000000003wwwwww40000000000000001T0j00" \
+                "Ht0000000,0*77\r\n!AIVDM,2,2,,B,000000000000008,2*1F\r\n"
+
+            expect_execution do
+                syskit_write @io.out_port, make_packet(vessel_info_msg)
+            end.to do
+                [have_one_new_sample(task.vessels_information_port),
+                 have_one_new_sample(task.voyages_information_port),
+                 have_one_new_sample(task.ais_stats_port)]
+            end
+
+            # lat = 45; long = -120
+            # cog = 90; sog = 10
+            position_msg = "!AIVDM,1,1,,B,15MgK4?P1cGJch0Igth3Q?wh0000,0*0F\r\n"
+
+            position, = expect_execution do
+                syskit_write @io.out_port, make_packet(position_msg)
+            end.to do
+                [have_one_new_sample(task.positions_port),
+                 have_one_new_sample(task.ais_stats_port)]
+            end
+
+            assert_equal 366_730_000, position.mmsi
+            assert_equal :POSITION_CENTERED_USING_COURSE, position.correction_status
+            assert_in_delta 44.9991 * Math::PI / 180, position.latitude.rad, 1e-4
+            assert_in_delta -119.9993 * Math::PI / 180, position.longitude.rad, 1e-4
+        end
+
+        it "expects no correction if there's no corresponding vessel" do
+            expect_execution do
+                syskit_write @io.out_port, @msg05
             end.to do
                 [have_one_new_sample(task.vessels_information_port),
                  have_one_new_sample(task.voyages_information_port),
@@ -160,9 +217,9 @@ describe OroGen.nmea0183.AISTask do
                  have_one_new_sample(task.ais_stats_port)]
             end
 
-            assert_equal 366_730_000, position.mmsi
-            assert_in_delta 44.9991 * Math::PI / 180, position.latitude.rad, 1e-4
-            assert_in_delta -119.9993 * Math::PI / 180, position.longitude.rad, 1e-4
+            assert_equal :POSITION_RAW, position.correction_status
+            assert_in_delta 45 * Math::PI / 180, position.latitude.rad, 1e-4
+            assert_in_delta -120 * Math::PI / 180, position.longitude.rad, 1e-4
         end
     end
 
@@ -198,6 +255,7 @@ describe OroGen.nmea0183.AISTask do
             end
 
             assert_equal 366_730_000, position.mmsi
+            assert_equal :POSITION_RAW, position.correction_status
             assert_in_delta 45 * Math::PI / 180, position.latitude.rad, 1e-4
             assert_in_delta -120 * Math::PI / 180, position.longitude.rad, 1e-4
         end
