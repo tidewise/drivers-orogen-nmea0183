@@ -37,7 +37,7 @@ bool AISTask::configureHook()
     }
 
     m_use_sensor_offset_correction = _use_sensor_offset_correction.get();
-    m_ais.reset(new AIS(*mDriver));
+    m_ais.reset(new AIS(*m_driver));
     return true;
 }
 bool AISTask::startHook()
@@ -148,5 +148,5 @@ void AISTask::stopHook()
 void AISTask::cleanupHook()
 {
     AISTaskBase::cleanupHook();
-    mDriver.release();
+    m_driver.release();
 }

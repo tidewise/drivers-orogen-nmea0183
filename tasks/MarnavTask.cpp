@@ -33,7 +33,7 @@ bool MarnavTask::configureHook()
         return false;
     }
 
-    mDriver = move(driver);
+    m_driver = move(driver);
     guard.commit();
     return true;
 }
@@ -51,7 +51,7 @@ bool MarnavTask::startHook()
     uint8_t buffer[BUFFER_SIZE];
     try {
         while(true) {
-            mDriver->readPacket(buffer, BUFFER_SIZE, base::Time(), base::Time());
+            m_driver->readPacket(buffer, BUFFER_SIZE, base::Time(), base::Time());
         }
     }
     catch(iodrivers_base::TimeoutError&) {}
@@ -66,19 +66,19 @@ void MarnavTask::processIO() {
     static const int BUFFER_SIZE = marnav::nmea::sentence::max_length * 2;
     uint8_t buffer[BUFFER_SIZE];
     try {
-        int sentence_size = mDriver->readPacket(buffer, BUFFER_SIZE);
+        int sentence_size = m_driver->readPacket(buffer, BUFFER_SIZE);
 
         char* buffer_s = reinterpret_cast<char*>(buffer);
         string sentence_string(buffer_s, buffer_s + sentence_size - 2);
         processRawSentence(sentence_string);
     }
     catch (MarnavParsingError const& e) {
-        mNMEAStats.invalid_sentences++;
+        m_nmea_stats.invalid_sentences++;
         LOG_ERROR_S << "NMEA sentence not recognized by marnav: "
                     << e.what() << std::endl;
     }
 
-    _nmea_stats.write(mNMEAStats);
+    _nmea_stats.write(m_nmea_stats);
 }
 
 void MarnavTask::processRawSentence(std::string const& sentence_string) {
@@ -87,18 +87,18 @@ void MarnavTask::processRawSentence(std::string const& sentence_string) {
         sentence = marnav::nmea::make_sentence(sentence_string);
     }
     catch (std::exception const& e) {
-        mNMEAStats.invalid_sentences++;
+        m_nmea_stats.invalid_sentences++;
         LOG_ERROR_S << "NMEA sentence not recognized by marnav: "
                     << e.what() << std::endl;
         return;
     }
 
-    mNMEAStats.time = base::Time::now();
-    mNMEAStats.received_sentences++;
+    m_nmea_stats.time = base::Time::now();
+    m_nmea_stats.received_sentences++;
 
     bool processed = processSentence(*sentence);
     if (!processed) {
-        mNMEAStats.ignored_sentences++;
+        m_nmea_stats.ignored_sentences++;
     }
 }
 void MarnavTask::errorHook()
