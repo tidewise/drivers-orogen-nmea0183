@@ -37,7 +37,7 @@ namespace nmea0183 {
         /**
          * @brief Map of vessel information indexed by MMSI
          */
-        std::map<int, ais_base::VesselInformation> m_vessels;
+        std::map<size_t, ais_base::VesselInformation> m_vessels;
 
         /**
          * @brief Converter for GPS coordinates to UTM and vice-versa
@@ -55,7 +55,9 @@ namespace nmea0183 {
          * @param position The position report
          * @param mmsi The vessel's MMSI
          */
-        void processPositionReport(ais_base::Position const& position, int mmsi);
+        void processPositionReport(
+            std::optional<ais_base::VesselInformation> const& vessel,
+            ais_base::Position const& position);
 
         /**
          * @brief Parses and processes an NMEA sentence
@@ -66,7 +68,8 @@ namespace nmea0183 {
         bool processSentence(marnav::nmea::sentence const& sentence);
 
         /**
-         * @brief Retrieves vessel information corresponding to the given MMSI
+         * @brief Retrieves vessel information corresponding to the given MMSI,
+         * if no vessel with the corresponding MMSI is found, it returns nothing.
          *
          * @param mmsi The vessel's MMSI
          * @return Vessel information if found, otherwise std::nullopt

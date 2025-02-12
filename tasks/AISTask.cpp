@@ -37,6 +37,8 @@ bool AISTask::configureHook()
     }
 
     m_use_sensor_offset_correction = _use_sensor_offset_correction.get();
+    m_UTM_converter.setParameters(_utm_configuration.get());
+
     m_ais.reset(new AIS(*m_driver));
     return true;
 }
@@ -45,8 +47,6 @@ bool AISTask::startHook()
     if (!AISTaskBase::startHook()) {
         return false;
     }
-
-    m_UTM_converter.setParameters(_utm_configuration.get());
     return true;
 }
 void AISTask::updateHook()
@@ -82,19 +82,19 @@ bool AISTask::processSentence(marnav::nmea::sentence const& sentence)
         case ais::message_id::position_report_class_a: {
             auto msg01 = ais::message_cast<ais::message_01>(msg);
             auto position = AIS::getPosition(*msg01);
-            processPositionReport(position, position.mmsi);
+            processPositionReport(getCorrespondingVesselInfo(position.mmsi), position);
             break;
         }
         case ais::message_id::position_report_class_a_assigned_schedule: {
             auto msg02 = ais::message_cast<ais::message_02>(msg);
             auto position = AIS::getPosition(*msg02);
-            processPositionReport(position, position.mmsi);
+            processPositionReport(getCorrespondingVesselInfo(position.mmsi), position);
             break;
         }
         case ais::message_id::position_report_class_a_response_to_interrogation: {
             auto msg03 = ais::message_cast<ais::message_03>(msg);
             auto position = AIS::getPosition(*msg03);
-            processPositionReport(position, position.mmsi);
+            processPositionReport(getCorrespondingVesselInfo(position.mmsi), position);
             break;
         }
         case ais::message_id::static_and_voyage_related_data: {
@@ -111,23 +111,19 @@ bool AISTask::processSentence(marnav::nmea::sentence const& sentence)
     }
     return true;
 }
-void AISTask::processPositionReport(ais_base::Position const& position, int mmsi)
+void AISTask::processPositionReport(
+    std::optional<ais_base::VesselInformation> const& vessel,
+    ais_base::Position const& position)
 {
-    if (!m_use_sensor_offset_correction) {
+    if (!m_use_sensor_offset_correction || !vessel.has_value()) {
         _positions.write(position);
         return;
     }
 
-    auto vessel = getCorrespondingVesselInfo(mmsi);
-    if (vessel.has_value()) {
-        auto corrected_position = AIS::applyPositionCorrection(position,
-            vessel->reference_position,
-            m_UTM_converter);
-        _positions.write(corrected_position);
-    }
-    else {
-        _positions.write(position);
-    }
+    auto corrected_position = AIS::applyPositionCorrection(position,
+        vessel->reference_position,
+        m_UTM_converter);
+    _positions.write(corrected_position);
 }
 std::optional<ais_base::VesselInformation> AISTask::getCorrespondingVesselInfo(int mmsi)
 {
