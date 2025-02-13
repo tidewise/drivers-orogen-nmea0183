@@ -19,8 +19,8 @@ namespace nmea0183{
         friend class MarnavTaskBase;
 
     protected:
-        std::unique_ptr<Driver> mDriver;
-        NMEAStats mNMEAStats;
+        std::unique_ptr<Driver> m_driver;
+        NMEAStats m_nmea_stats;
 
         virtual void processIO();
 
